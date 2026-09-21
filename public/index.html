@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TechGadget · Modern Tech & Electronics Store</title>
+
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome via CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          display: ['Space Grotesk', 'ui-sans-serif', 'sans-serif'],
+        },
+        colors: {
+          ink: { 950: '#05060a', 900: '#0b0e17', 800: '#141826', 700: '#1e2436' },
+          cyan: { glow: '#22d3ee' },
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  * { font-family: 'Inter', system-ui, sans-serif; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+  .glow-badge {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5);
+    animation: glowPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(34, 211, 238, .45), 0 0 12px 2px rgba(168, 85, 247, .35); }
+    50%  { box-shadow: 0 0 0 8px rgba(34, 211, 238, 0), 0 0 22px 6px rgba(168, 85, 247, .5); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0), 0 0 12px 2px rgba(168, 85, 247, .35); }
+  }
+
+  .hero-grid {
+    background-image:
+      linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+
+  .card-hover { transition: transform .2s ease, box-shadow .2s ease; }
+  .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -8px rgba(15,23,42,.18); }
+
+  .fade-in { animation: fadeIn .35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .drawer-panel { transition: transform .3s cubic-bezier(.16,1,.3,1); }
+  .modal-backdrop { animation: fadeInBd .18s ease; }
+  .modal-panel { animation: popIn .22s cubic-bezier(.2,.9,.3,1.1); }
+  @keyframes fadeInBd { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popIn { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+  .pill { transition: background-color .15s ease, color .15s ease, border-color .15s ease; }
+
+  .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+  @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  input:focus, select:focus, button:focus-visible { outline: 2px solid #22d3ee; outline-offset: 1px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glow-badge, .fade-in, .skeleton { animation: none !important; }
+  }
+</style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 bg-ink-950/95 backdrop-blur border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="h-16 flex items-center gap-4">
+
+      <!-- Brand -->
+      <a href="#" class="flex items-center gap-2.5 shrink-0">
+        <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500 glow-badge flex items-center justify-center text-ink-950">
+          <i class="fa-solid fa-bolt text-sm"></i>
+        </span>
+        <span class="font-display font-bold text-white text-lg tracking-tight hidden xs:inline">TechGadget</span>
+      </a>
+
+      <!-- Live search -->
+      <div class="flex-1 max-w-xl mx-auto hidden sm:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+          <input id="searchInput" oninput="handleSearch()" type="text" placeholder="Search headphones, keyboards, watches…"
+            class="w-full pl-10 pr-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:bg-white/10 transition" />
+        </div>
+      </div>
+
+      <!-- Right cluster -->
+      <div class="flex items-center gap-2 sm:gap-3 ml-auto shrink-0">
+
+        <!-- Cart -->
+        <button onclick="openCartDrawer()" class="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-200 hover:bg-white/10 transition">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span id="cartBadge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-400 text-ink-950 text-[10px] font-bold flex items-center justify-center">0</span>
+        </button>
+
+        <!-- User Profile Dropdown Container -->
+        <div class="relative inline-block text-left">
+          <button id="authButton" onclick="handleAuthButtonClick()"
+            class="inline-flex items-center gap-2 bg-white text-ink-950 text-sm font-semibold px-4 py-2.5 rounded-full hover:bg-slate-100 transition shadow-sm">
+            <i class="fa-regular fa-user text-xs"></i>
+            <span id="authButtonLabel">Login / Register</span>
+            <i id="userDropdownArrow" class="fa-solid fa-chevron-down text-[10px] ml-1 hidden"></i>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50 fade-in">
+            <div class="px-4 py-2.5 border-b border-slate-100">
+              <p class="text-xs text-slate-400">Signed in as</p>
+              <p id="dropdownUserName" class="text-sm font-semibold text-slate-800 truncate">User</p>
+            </div>
+            <a href="#" onclick="closeUserDropdown()" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+              <i class="fa-solid fa-box mr-2 text-slate-400"></i> My Orders
+            </a>
+            <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition border-t border-slate-100 font-medium flex items-center">
+              <i class="fa-solid fa-right-from-bracket mr-2"></i> Log Out
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile search toggle -->
+        <button onclick="toggleMobileSearch()" class="sm:hidden w-10 h-10 rounded-full flex items-center justify-center text-slate-200 hover:bg-white/10 transition">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile search row -->
+    <div id="mobileSearchRow" class="hidden sm:hidden pb-3">
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+        <input oninput="document.getElementById('searchInput').value=this.value; handleSearch();" type="text" placeholder="Search products…"
+          class="w-full pl-10 pr-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500" />
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO / FLASH SALE BANNER -->
+<section class="relative bg-gradient-to-br from-ink-950 via-ink-900 to-purple-950 overflow-hidden">
+  <div class="absolute inset-0 hero-grid opacity-40"></div>
+  <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl"></div>
+  <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+    <div id="flashBanner" class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+
+      <div class="max-w-xl">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-cyan-300 text-xs font-semibold tracking-wide uppercase">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Flash Sale Live Now
+        </span>
+        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mt-4 leading-tight">
+          Up to <span class="text-cyan-300">20% off</span> select audio & keyboards
+        </h1>
+        <p class="text-slate-400 mt-3 text-sm sm:text-base">Limited-time deal, live straight from the database — allocated stock decrements in real time as orders come in.</p>
+        <button onclick="scrollToCatalog(true)" class="mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-purple-500 text-ink-950 font-semibold text-sm px-5 py-3 rounded-full hover:opacity-90 transition shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-bolt"></i> Shop Flash Deals
+        </button>
+      </div>
+
+      <!-- Countdown -->
+      <div class="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 backdrop-blur w-full lg:w-auto">
+        <p class="text-xs text-slate-400 mb-3 text-center lg:text-left">Deal ends in</p>
+        <div id="countdownTimer" class="flex items-center gap-3 sm:gap-4">
+          <div class="text-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-ink-950/70 border border-white/10 flex items-center justify-center font-display text-xl sm:text-2xl font-bold text-white" id="cd-hours">--</div>
+            <p class="text-[10px] text-slate-500 mt-1.5 uppercase tracking-wide">Hours</p>
+          </div>
+          <span class="text-white/30 font-display text-xl -mt-4">:</span>
+          <div class="text-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-ink-950/70 border border-white/10 flex items-center justify-center font-display text-xl sm:text-2xl font-bold text-white" id="cd-minutes">--</div>
+            <p class="text-[10px] text-slate-500 mt-1.5 uppercase tracking-wide">Minutes</p>
+          </div>
+          <span class="text-white/30 font-display text-xl -mt-4">:</span>
+          <div class="text-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-ink-950/70 border border-white/10 flex items-center justify-center font-display text-xl sm:text-2xl font-bold text-cyan-300" id="cd-seconds">--</div>
+            <p class="text-[10px] text-slate-500 mt-1.5 uppercase tracking-wide">Seconds</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-14">
+
+  <!-- Category pill filters -->
+  <section>
+    <div id="categoryPills" class="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <!-- populated by JS -->
+    </div>
+  </section>
+
+  <!-- Top sellers -->
+  <section>
+    <div class="flex items-end justify-between mb-5">
+      <div>
+        <h2 class="font-display text-xl sm:text-2xl font-bold text-slate-900">Best Sellers</h2>
+        <p class="text-sm text-slate-500 mt-1">Live from <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono">View_Top_Selling_Products</code></p>
+      </div>
+      <i class="fa-solid fa-fire text-orange-500 text-xl"></i>
+    </div>
+    <div id="topSellersGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- populated by JS -->
+    </div>
+  </section>
+
+  <!-- Catalog -->
+  <section id="catalogSection">
+    <div class="flex items-end justify-between mb-5">
+      <div>
+        <h2 class="font-display text-xl sm:text-2xl font-bold text-slate-900" id="catalogHeading">All Products</h2>
+        <p id="catalogCount" class="text-sm text-slate-500 mt-1"></p>
+      </div>
+    </div>
+    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <!-- populated by JS -->
+    </div>
+    <div id="emptyState" class="hidden flex-col items-center justify-center text-center py-16">
+      <i class="fa-solid fa-magnifying-glass-minus text-3xl text-slate-300 mb-3"></i>
+      <p class="text-slate-500 text-sm">No products match your search or filter.</p>
+    </div>
+  </section>
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-ink-950 border-t border-white/10 mt-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2.5">
+      <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-ink-950">
+        <i class="fa-solid fa-bolt text-xs"></i>
+      </span>
+      <span class="font-display font-bold text-white">TechGadget</span>
+    </div>
+    <p class="text-slate-500 text-xs text-center">DBMS Lab Project — Dual-Portal E-Commerce System. Backend: Node.js + Express + MySQL.</p>
+    <div class="flex items-center gap-4 text-slate-400">
+      <i class="fa-brands fa-github hover:text-white transition cursor-pointer"></i>
+      <i class="fa-brands fa-linkedin hover:text-white transition cursor-pointer"></i>
+      <i class="fa-regular fa-envelope hover:text-white transition cursor-pointer"></i>
+    </div>
+  </div>
+</footer>
+
+<!-- CART DRAWER -->
+<div id="cartOverlay" class="hidden fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeCartDrawer()"></div>
+  <div id="cartPanel" class="drawer-panel absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col translate-x-full">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-display font-bold text-lg text-slate-900"><i class="fa-solid fa-cart-shopping mr-2 text-slate-400"></i>Your Cart</h3>
+      <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div id="cartItemsList" class="flex-1 overflow-y-auto px-5 py-4 space-y-4"></div>
+
+    <div id="cartEmptyState" class="hidden flex-1 flex flex-col items-center justify-center text-center px-5">
+      <i class="fa-solid fa-cart-shopping text-3xl text-slate-200 mb-3"></i>
+      <p class="text-slate-400 text-sm">Your cart is empty.</p>
+      <button onclick="closeCartDrawer()" class="mt-4 text-sm font-medium text-cyan-600 hover:text-cyan-700">Continue shopping →</button>
+    </div>
+
+    <div id="cartFooter" class="border-t border-slate-100 px-5 py-4 space-y-3">
+      <div class="flex items-center justify-between text-sm text-slate-500">
+        <span>Subtotal</span>
+        <span id="cartSubtotal" class="font-mono font-medium text-slate-800">৳0</span>
+      </div>
+      <div class="flex items-center justify-between text-base font-semibold text-slate-900">
+        <span>Total</span>
+        <span id="cartTotal" class="font-mono">৳0</span>
+      </div>
+      <button onclick="handleCheckout()" id="checkoutBtn"
+        class="w-full bg-gradient-to-r from-cyan-400 to-purple-500 text-ink-950 font-semibold text-sm py-3 rounded-full hover:opacity-90 transition">
+        Proceed to Checkout
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="modal-backdrop absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeAuthModal()"></div>
+  <div class="modal-panel relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+
+    <div class="px-6 pt-6 pb-2 flex items-center justify-between">
+      <span class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-ink-950">
+        <i class="fa-solid fa-bolt text-sm"></i>
+      </span>
+      <button onclick="closeAuthModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="px-6">
+      <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1 mt-2">
+        <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 text-sm font-medium py-2 rounded-full transition">Login</button>
+        <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 text-sm font-medium py-2 rounded-full transition">Register</button>
+      </div>
+    </div>
+
+    <!-- Login form -->
+    <form id="loginForm" onsubmit="handleLogin(event)" class="px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Email</label>
+        <input type="email" required placeholder="you@example.com"
+          class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Password</label>
+        <input type="password" required placeholder="••••••••"
+          class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white transition" />
+      </div>
+      <button type="submit" class="w-full bg-ink-950 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-ink-800 transition">Login</button>
+    </form>
+
+    <!-- Register form -->
+    <form id="registerForm" onsubmit="handleRegister(event)" class="hidden px-6 py-5 space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Full Name</label>
+        <input id="regName" type="text" required placeholder="Your name"
+          class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Email</label>
+        <input type="email" required placeholder="you@example.com"
+          class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white transition" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1.5">Password</label>
+        <input type="password" required placeholder="Create a password"
+          class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white transition" />
+      </div>
+      <button type="submit" class="w-full bg-ink-950 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-ink-800 transition">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="hidden fixed bottom-6 right-6 z-[60] max-w-sm">
+  <div class="flex items-start gap-3 bg-ink-950 text-white text-sm rounded-xl shadow-xl px-4 py-3 border border-white/10">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
+    <p id="toastMessage">Done.</p>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 /* ADMIN PANEL DASHBOARD & INVENTORY MANAGEMENT LOGIC */
 
-let nextFlashSaleId = 4;
 
 /* REAL DATABASE FETCH FUNCTION */
 async function fetchProductsFromDB() {
@@ -17,16 +16,7 @@ async function fetchProductsFromDB() {
   }
 }
 
-let LOYALTY_USERS = [
-  { id: 101, name: "Rafiq Ahmed", total_spent: 125000, points: 1250 },
-  { id: 102, name: "Nusrat Jahan", total_spent: 48000, points: 480 },
-  { id: 103, name: "Tanvir Hasan", total_spent: 8500, points: 85 },
-  { id: 104, name: "Farzana Akter", total_spent: 210000, points: 2100 },
-  { id: 105, name: "Shakil Rana", total_spent: 32000, points: 320 },
-  { id: 106, name: "Mim Chowdhury", total_spent: 5200, points: 52 },
-  { id: 107, name: "Imran Kabir", total_spent: 96000, points: 960 },
-  { id: 108, name: "Proma Sultana", total_spent: 15300, points: 153 },
-];
+let LOYALTY_USERS = [];
 
 const TOTAL_ORDERS_PROCESSED = 1842;
 
@@ -37,13 +27,10 @@ function isoLocal(offsetMs) {
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-let FLASH_SALES = [
-  { id: 1, product_id: 1, discount_percent: 25, flash_stock: 30, start_time: new Date(Date.now() - 60*60*1000).toISOString(), end_time: new Date(Date.now() + 3*60*60*1000).toISOString() },
-  { id: 2, product_id: 5, discount_percent: 15, flash_stock: 20, start_time: new Date(Date.now() + 24*60*60*1000).toISOString(), end_time: new Date(Date.now() + 28*60*60*1000).toISOString() },
-  { id: 3, product_id: 3, discount_percent: 40, flash_stock: 10, start_time: new Date(Date.now() - 48*60*60*1000).toISOString(), end_time: new Date(Date.now() - 24*60*60*1000).toISOString() },
-];
+let FLASH_SALES = [];
+let nextFlashSaleId = 1;
 
-const NETWORK_DELAY = 350;
+const NETWORK_DELAY = 150;
 function delay(ms = NETWORK_DELAY) { return new Promise(res => setTimeout(res, ms)); }
 
 /* API WRAPPERS CONNECTED TO REAL DATABASE */
@@ -63,33 +50,48 @@ async function apiSaveProduct(product) {
 }
 
 async function apiDeleteProduct(id) {
-  const response = await fetch('http://localhost:5000/api/products/' + id, { 
-    method: 'DELETE' 
-  });
+  const response = await fetch('http://localhost:5000/api/products/' + id, { method: 'DELETE' });
   return await response.json();
 }
 
 async function apiGetLoyaltyUsers() {
-  await delay();
-  return structuredClone(LOYALTY_USERS);
+  const response = await fetch('http://localhost:5000/api/loyalty-stats');
+  const result = await response.json();
+  if (!response.ok || !result.success) throw new Error(result.message || 'Failed to load loyalty data');
+  return result.data.map(u => ({
+    id: u.user_id,
+    name: u.name,
+    total_spent: Number(u.total_spent || 0),
+    points: Number(u.loyalty_points || 0),
+    tier: u.tier_level,
+    eligible: Number(u.loyalty_eligible || 0) === 1
+  }));
 }
 
 async function apiGetFlashSales() {
-  await delay();
-  return structuredClone(FLASH_SALES);
+  const response = await fetch('http://localhost:5000/api/admin/flash-sales');
+  if (!response.ok) throw new Error('Failed to load flash sales');
+  return await response.json();
 }
 
 async function apiLaunchFlashSale(payload) {
-  await delay(500);
-  payload.id = nextFlashSaleId++;
-  FLASH_SALES.push(payload);
-  return payload;
+  const response = await fetch('http://localhost:5000/api/flash-sales', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'Could not launch flash sale');
+  return result.sale;
 }
 
 async function apiCancelFlashSale(id) {
-  await delay();
-  FLASH_SALES = FLASH_SALES.filter(f => f.id !== id);
-  return { success: true };
+  const response = await fetch(`http://localhost:5000/api/flash-sales/${id}/cancel`, {
+    method: 'PATCH'
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'Could not cancel flash sale');
+  return result;
 }
 
 /* TAB NAVIGATION */
@@ -172,8 +174,8 @@ function flashSaleStatus(sale) {
   const now = Date.now();
   const start = new Date(sale.start_time).getTime();
   const end = new Date(sale.end_time).getTime();
+  if (sale.status === 'Ended' || now > end) return { label: "Ended", style: "bg-slate-200 text-slate-500 ring-1 ring-inset ring-slate-300" };
   if (now < start) return { label: "Scheduled", style: "bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200" };
-  if (now > end) return { label: "Expired", style: "bg-slate-200 text-slate-500 ring-1 ring-inset ring-slate-300" };
   return { label: "Active", style: "bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200" };
 }
 
@@ -229,14 +231,17 @@ function renderLoyaltyTable() {
   }
 
   tbody.innerHTML = filtered.map(u => {
-    const tier = getTier(u.points);
+    const tier = u.tier || getTier(u.points);
+    const eligibility = u.eligible
+      ? '<span class="text-emerald-700 font-medium">Eligible</span>'
+      : '<span class="text-slate-400">Below ৳5,000</span>';
     return `
       <tr class="hover:bg-slate-50/80 transition">
         <td class="px-5 py-3.5 font-mono-num text-slate-500">#${u.id}</td>
         <td class="px-5 py-3.5 font-medium text-slate-800">${escapeHtml(u.name)}</td>
         <td class="px-5 py-3.5 font-mono-num text-slate-700">${formatTaka(u.total_spent)}</td>
         <td class="px-5 py-3.5 font-mono-num text-slate-700">${u.points.toLocaleString()} pts</td>
-        <td class="px-5 py-3.5">${tierBadge(tier)}</td>
+        <td class="px-5 py-3.5">${tierBadge(tier)}<div class="mt-1 text-[11px]">${eligibility}</div></td>
       </tr>`;
   }).join("");
 }
@@ -305,7 +310,7 @@ function openProductModal(id) {
   form.reset();
 
   if (id) {
-    const product = cachedProducts.find(p => (p.product_id || p.id) === id);
+    const product = cachedProducts.find(p => Number(p.product_id || p.id) === Number(id));
     document.getElementById("productModalTitle").textContent = "Edit Product";
     document.getElementById("productId").value = product.product_id || product.id;
     document.getElementById("productName").value = product.name;
@@ -357,7 +362,7 @@ async function handleSaveProduct(event) {
 }
 
 async function confirmDeleteProduct(id) {
-  const product = cachedProducts.find(p => (p.product_id || p.id) === id);
+  const product = cachedProducts.find(p => Number(p.product_id || p.id) === Number(id));
   if (!product) return;
   const ok = confirm(`Delete "${product.name}"? This cannot be undone.`);
   if (!ok) return;
@@ -395,7 +400,7 @@ function populateProductDropdown() {
 }
 
 function productName(id) {
-  const p = cachedProducts.find(p => (p.product_id || p.id) === id);
+  const p = cachedProducts.find(p => Number(p.product_id || p.id) === Number(id));
   return p ? p.name : `Product #${id}`;
 }
 
@@ -415,7 +420,7 @@ function renderFlashSalesTable() {
     return `
       <tr class="hover:bg-slate-50/80 transition">
         <td class="px-5 py-3.5 font-medium text-slate-800">${escapeHtml(productName(sale.product_id))}</td>
-        <td class="px-5 py-3.5 font-mono-num text-emerald-700 font-semibold">-${sale.discount_percent}%</td>
+        <td class="px-5 py-3.5 font-mono-num text-emerald-700 font-semibold">-${sale.discount_percentage}%</td>
         <td class="px-5 py-3.5 font-mono-num text-slate-700">${sale.flash_stock} units</td>
         <td class="px-5 py-3.5 text-slate-600 text-xs">
           ${formatDateTime(sale.start_time)} <span class="text-slate-300">→</span> ${formatDateTime(sale.end_time)}
@@ -427,7 +432,7 @@ function renderFlashSalesTable() {
           </span>
         </td>
         <td class="px-5 py-3.5 text-right">
-          <button onclick="cancelFlashSale(${sale.id})" class="px-2.5 py-1.5 text-xs font-medium rounded-md text-rose-700 bg-rose-50 hover:bg-rose-100 transition">Cancel</button>
+          ${status.label !== "Ended" ? `<button onclick="cancelFlashSale(${sale.id})" class="px-2.5 py-1.5 text-xs font-medium rounded-md text-rose-700 bg-rose-50 hover:bg-rose-100 transition">End Sale</button>` : '<span class="text-xs text-slate-400">History</span>'}
         </td>
       </tr>`;
   }).join("");
@@ -463,7 +468,7 @@ async function handleLaunchFlashSale(event) {
   try {
     await apiLaunchFlashSale({
       product_id: productId,
-      discount_percent: discount,
+      discount_percentage: discount,
       flash_stock: flashStock,
       start_time: new Date(start).toISOString(),
       end_time: new Date(end).toISOString(),
@@ -487,10 +492,14 @@ async function handleLaunchFlashSale(event) {
 async function cancelFlashSale(id) {
   const ok = confirm("Cancel this flash sale? Any in-progress discount will stop immediately.");
   if (!ok) return;
-  await apiCancelFlashSale(id);
-  cachedFlashSales = await apiGetFlashSales();
-  renderFlashSalesTable();
-  showToast("Flash sale cancelled.");
+  try {
+    await apiCancelFlashSale(id);
+    cachedFlashSales = await apiGetFlashSales();
+    renderFlashSalesTable();
+    showToast("Flash sale ended.");
+  } catch (err) {
+    showToast(err.message || "Could not cancel flash sale.", "error");
+  }
 }
 
 /* INITIALIZATION */

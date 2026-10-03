@@ -355,6 +355,57 @@
   </div>
 </div>
 
+<!-- PRODUCT REVIEW MODAL -->
+<div id="reviewModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="modal-backdrop absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeReviewModal()"></div>
+  <div class="modal-panel relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <p class="text-[10px] uppercase tracking-widest font-bold text-cyan-600">Product Reviews</p>
+        <h3 id="reviewProductName" class="font-display font-bold text-lg text-slate-900 mt-0.5">Product</h3>
+      </div>
+      <button onclick="closeReviewModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="px-6 py-5 max-h-[75vh] overflow-y-auto">
+      <div class="rounded-xl bg-slate-50 border border-slate-100 p-4 mb-5">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-sm font-semibold text-slate-800">Write a review</h4>
+          <span class="text-[11px] text-slate-400">1 to 5 stars</span>
+        </div>
+        <div id="reviewStars" class="flex items-center gap-1 mb-3" aria-label="Select rating">
+          <button type="button" onclick="selectReviewRating(1)" data-rating="1" class="review-star text-2xl text-slate-300 hover:text-amber-400 transition" aria-label="1 star">★</button>
+          <button type="button" onclick="selectReviewRating(2)" data-rating="2" class="review-star text-2xl text-slate-300 hover:text-amber-400 transition" aria-label="2 stars">★</button>
+          <button type="button" onclick="selectReviewRating(3)" data-rating="3" class="review-star text-2xl text-slate-300 hover:text-amber-400 transition" aria-label="3 stars">★</button>
+          <button type="button" onclick="selectReviewRating(4)" data-rating="4" class="review-star text-2xl text-slate-300 hover:text-amber-400 transition" aria-label="4 stars">★</button>
+          <button type="button" onclick="selectReviewRating(5)" data-rating="5" class="review-star text-2xl text-slate-300 hover:text-amber-400 transition" aria-label="5 stars">★</button>
+        </div>
+        <textarea id="reviewComment" rows="3" maxlength="1000" placeholder="Share your experience with this product..."
+          class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:border-cyan-400 transition resize-none"></textarea>
+        <div class="flex items-center justify-between mt-3">
+          <span id="reviewHint" class="text-[11px] text-slate-400">Please select a rating.</span>
+          <button id="submitReviewBtn" onclick="submitProductReview()" type="button"
+            class="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
+            Submit Review
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-sm font-semibold text-slate-800">Customer reviews</h4>
+          <span id="reviewCount" class="text-[11px] text-slate-400">0 reviews</span>
+        </div>
+        <div id="reviewsList" class="space-y-1">
+          <p class="text-xs text-slate-400">Loading reviews...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast" class="hidden fixed bottom-6 right-6 z-[60] max-w-sm">
   <div class="flex items-start gap-3 bg-ink-950 text-white text-sm rounded-xl shadow-xl px-4 py-3 border border-white/10">

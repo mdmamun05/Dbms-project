@@ -3,6 +3,107 @@ const router = express.Router();
 // Apnar DB connection file context onujayi path set korun (e.g., '../db' ba '../config/db')
 const db = require('../config/db'); 
 
+// Update Product - Admin Inventory
+router.put('/products/:id', async (req, res) => {
+  try {
+    const productId = Number(req.params.id);
+
+    if (!Number.isInteger(productId) || productId <= 0) {
+      return res.status(400).json({ error: 'Invalid product ID.' });
+    }
+
+    const {
+      name,
+      description,
+      category_id,
+      price,
+      stock_quantity,
+      image_url
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Product name is required.' });
+    }
+
+    const numericPrice = Number(price);
+    const numericStock = Number(stock_quantity);
+
+    if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+      return res.status(400).json({ error: 'Invalid product price.' });
+    }
+
+    if (!Number.isInteger(numericStock) || numericStock < 0) {
+      return res.status(400).json({ error: 'Invalid stock quantity.' });
+    }
+
+    const categoryId =
+      category_id === null ||
+      category_id === undefined ||
+      category_id === ''
+        ? null
+        : Number(category_id);
+
+    if (categoryId !== null && (!Number.isInteger(categoryId) || categoryId <= 0)) {
+      return res.status(400).json({ error: 'Invalid category.' });
+    }
+
+    const [result] = await db.query(
+      `UPDATE products
+       SET
+         name = ?,
+         description = ?,
+         category_id = ?,
+         price = ?,
+         stock_quantity = ?,
+         image_url = ?
+       WHERE product_id = ?`,
+      [
+        name.trim(),
+        description || '',
+        categoryId,
+        numericPrice,
+        numericStock,
+        image_url || null,
+        productId
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Product not found.' });
+    }
+
+    const [rows] = await db.query(
+      `SELECT
+         p.product_id,
+         p.name,
+         p.description,
+         p.category_id,
+         p.price,
+         p.stock_quantity,
+         p.image_url,
+         c.category_name
+       FROM products p
+       LEFT JOIN categories c
+         ON p.category_id = c.category_id
+       WHERE p.product_id = ?`,
+      [productId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Product updated successfully.',
+      product: rows[0]
+    });
+
+  } catch (err) {
+    console.error('Update product error:', err);
+    res.status(500).json({
+      error: 'Failed to update product.',
+      details: err.message
+    });
+  }
+});
+
 // Flash Sales API
 router.get('/flash-sales', async (req, res) => {
   try {

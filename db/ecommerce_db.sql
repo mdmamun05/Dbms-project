@@ -134,7 +134,9 @@ CREATE TABLE `user_loyalty` (
   `total_spent` decimal(10,2) DEFAULT 0.00,
   `loyalty_points` int(11) DEFAULT 0,
   `tier_level` enum('Bronze','Silver','Gold') DEFAULT 'Bronze',
-  `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `last_updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  CONSTRAINT `chk_loyalty_total_spent` CHECK (`total_spent` >= 0),
+  CONSTRAINT `chk_loyalty_points` CHECK (`loyalty_points` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
